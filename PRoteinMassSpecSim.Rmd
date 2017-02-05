@@ -17,6 +17,17 @@ Aim of this project is to simulate Protein Mass Spectra from the Protein Sequenc
 
 Further features might be the simulation of a mass spectrum by UniProt Accession instead of Protein Sequence, which is possible by looking up the sequence from UniProt, and the generation of a comparision plot to a measured spectrum for protein identification and publication purposes.
 
+## ToDo
+
+* Add code to calculate chemical formula from protein sequence, allow addition of common modfications
+* Utilize isotope distribution simulation from http://orgmassspec.github.io/
+* Add spectra generation
+* Add resolution simulation for orbitrap mass spectrometers
+* Add spectra import of as a list of mass and intensity
+* Plot head to tails comparision plot with ggplot
+
+
+
 <!-- ## Usage Example -->
 
 <!-- You can also embed plots, for example: -->
