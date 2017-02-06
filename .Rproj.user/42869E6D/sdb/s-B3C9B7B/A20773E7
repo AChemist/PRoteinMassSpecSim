@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "IsotopicDistribution <- function(formula = list(), charge = 1, ) {\n\n# The formula should include the hydrogens added or subracted by the charge.\n  \n  # Error if charge = 0\n  if(charge == 0) stop(\"a charge of zero is not allowed\")\n\n  inputFormula <- list(C = 0, H = 0, N = 0, O = 0, S = 0, P = 0, Br = 0, Cl = 0, F = 0, Si = 0)\n  inputFormula[names(formula)] <- formula  # replace default values with argument values\n  \n  simulation <- function(inputFormula) {\n    \n    # Simulate isotopic distribution of one molecule.\n    \n    massCarbon <- sum(sample(c(12.0000000, 13.0033548378),\n      size = inputFormula$C,\n      replace = TRUE,\n      prob = c(0.9893, 0.0107)))\n    \n    massHydrogen <- sum(sample(c(1.0078250321, 2.0141017780),\n      size = inputFormula$H,\n      replace = TRUE,\n      prob = c(0.999885, 0.000115)))\n     \n    massNitrogen <- sum(sample(c(14.0030740052, 15.0001088984),\n      size = inputFormula$N,\n      replace = TRUE,\n      prob = c(0.99632, 0.00368)))\n      \n    massOxygen <- sum(sample(c(15.9949146221, 16.99913150, 17.9991604),\n      size = inputFormula$O,\n      replace = TRUE,\n      prob = c(0.99757, 0.00038, 0.00205)))\n    \n    massSulfer <- sum(sample(c(31.97207069, 32.97145850, 33.96786683, 35.96708088),\n      size = inputFormula$S,\n      replace = TRUE,\n      prob = c(0.9493, 0.0076, 0.0429, 0.0002)))\n    \n    massPhosphorus <- inputFormula$P * 30.97376151\n    \n    massBromine <- sum(sample(c(78.9183376, 80.916291),\n      size = inputFormula$Br,\n      replace = TRUE,\n      prob = c(0.5069, 0.4931)))\n    \n    massChlorine <- sum(sample(c(34.96885271, 36.96590260),\n      size = inputFormula$Cl,\n      replace = TRUE,\n      prob = c(0.7578, 0.2422)))\n    \n    massFluorine <- inputFormula$F * 18.99840320\n    \n    massSilicon <- sum(sample(c(27.9769265327, 28.97649472, 29.97377022),\n      size = inputFormula$Si,\n      replace = TRUE,\n      prob = c(0.922297, 0.046832, 0.030872)))\n    \n    massMolecule <- sum(massCarbon, massHydrogen, massNitrogen, massOxygen,\n                        massSulfer, massPhosphorus, massBromine, massChlorine,\n                        massFluorine, massSilicon)\n    \n    mz <- massMolecule / abs(charge)  # m/z of molecule       \n              \n    return(mz)\n  }\n  \n  # Simulate set of molecules.\n  sim <- replicate(10000, expr = simulation(inputFormula))\n  \n  # Bin molecules according to their m/z value and make spectrum.\n  b <- seq(from = min(sim) - (1 / (2 * abs(charge))),\n            to = max(sim) + 1, \n            by = 1 / abs(charge))\n  bins <- cut(sim, breaks = b)\n  mz <- round(tapply(sim, bins, mean), digits = 2)\n  intensity <- as.vector(table(bins))\n  spectrum <- data.frame(mz, intensity)\n  spectrum <- spectrum[spectrum$intensity != 0, ]\n  spectrum$percent <- with(spectrum, round(intensity / max(intensity) * 100, digits = 2))\n  row.names(spectrum) <- 1:(nrow(spectrum))\n      \n  return(spectrum)\n\n}\n",
+    "created" : 1486420014746.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2082035949",
+    "id" : "A20773E7",
+    "lastKnownWriteTime" : 1486419981,
+    "last_content_update" : 1486420101282,
+    "path" : "~/GitHub/OrgMassSpecR/OrgMassSpecR/R/IsotopicDistribution.R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

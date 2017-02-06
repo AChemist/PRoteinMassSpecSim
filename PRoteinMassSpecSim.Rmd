@@ -27,6 +27,70 @@ Further features might be the simulation of a mass spectrum by UniProt Accession
 * Plot head to tails comparision plot with ggplot
 
 
+## Code
+
+
+```{r}
+
+#source("https://bioconductor.org/biocLite.R")
+#biocLite("UniProt.ws")
+library(UniProt.ws)
+
+library("OrgMassSpecR")
+library("ggplot2")
+
+source("Functions.R")
+
+```
+
+
+```{r}
+
+up <- UniProt.ws(taxId=9606)
+
+up
+
+keytypes(up)
+
+columns(up)
+
+proteinAccession <- "P41236"
+
+proteinSequence <- select(up, proteinAccession, "SEQUENCE", "UNIPROTKB")[,2]
+
+proteinChemForm <- pepToForm(proteinSequence, output = "list")
+
+MonoisotopicMass(proteinChemForm)
+
+isotopeDist <- IsotopicDistribution(proteinChemForm)
+
+ggplot(isotopeDist, aes(mz, percent)) + geom_point()
+ggplot(isotopeDist, aes(mz, ymin = 0, ymax = percent)) + geom_linerange()
+
+charges <- 45
+
+Hydrogen = 1.0078250321
+
+remove(isotopeDist_ch)
+
+
+
+for (z in charges){
+  
+  tmp <- isotopeDist
+  tmp$z <- z
+  tmp$mz <- ( tmp$mz + (Hydrogen * z))  / z
+  
+  if ( z == charges[1]){isotopeDist_ch <- tmp}
+  else {isotopeDist_ch <- rbind(isotopeDist_ch, tmp)}
+  
+}
+
+ggplot(isotopeDist_ch, aes(mz, ymin = 0, ymax = percent, colour = "red")) + geom_linerange()
+
+```
+
+
 
 <!-- ## Usage Example -->
 
@@ -37,3 +101,4 @@ Further features might be the simulation of a mass spectrum by UniProt Accession
 <!-- ``` -->
 
 <!-- Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot. -->
+
