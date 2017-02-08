@@ -1,6 +1,6 @@
 
 
-pepToForm <- function(sequence, output = "vector"){
+pepToForm <- function(sequence){
   if (!is.na(sequence)) {
     peptideVector <- strsplit(sequence, split = "")[[1]]
     FindElement <- function(residue){
@@ -34,71 +34,94 @@ pepToForm <- function(sequence, output = "vector"){
       resultsVector <- FindElement(peptideVector[i]) + resultsVector
     }
     resultsVector <- resultsVector + c(C = 0, H = 2, N = 0, O = 1, S = 0)
-    if (output == "vector") result <- paste("C",resultsVector[1],"H",resultsVector[2],"N",resultsVector[3],"O",resultsVector[4],"S",resultsVector[5])
-    if (output == "list") result <- list(C = resultsVector[1], H = resultsVector[2], N = resultsVector[3], O = resultsVector[4], S = resultsVector[5])
+    
+    result <- paste("C",resultsVector[1],"H",resultsVector[2],"N",resultsVector[3],"O",resultsVector[4],"S",resultsVector[5], "P",0)
+    
     return(result)
   }
   else return(NA)
 }
 
-addVariableModification <- function(){
+
+formulaCharToList <- function(char){
   
-  
+  vec <- unlist(strsplit(as.character(char), split = " "))
+  lis <- list(
+    C = as.integer(vec[2]),
+    H = as.integer(vec[4]),
+    N = as.integer(vec[6]),
+    O = as.integer(vec[8]),
+    S = as.integer(vec[10]),
+    P = as.integer(vec[12])
+  )
+  return(lis)
+}
+
+listToformularChar <- function(lis){
+  formChar <- paste("C",lis[1],"H",lis[2],"N",lis[3],"O",lis[4],"S",lis[5],"P",lis[6])
+  return(formChar)
 }
 
 
-# This function is based on the function IsotopicDistribution() from the package OrgMassSpecR
-# https://github.com/OrgMassSpec/OrgMassSpecR
-# I altered it to fit in my code / programming style
-
-isotopicDist <- function (formula = list(), charge = 1) 
-{
-  if (charge == 0) 
-    stop("a charge of zero is not allowed")
-  inputFormula <- list(C = 0, H = 0, N = 0, O = 0, S = 0, P = 0, 
-                       Br = 0, Cl = 0, F = 0, Si = 0)
-  inputFormula[names(formula)] <- formula
-  simulation <- function(inputFormula) {
-    massCarbon <- sum(sample(c(12, 13.0033548378), size = inputFormula$C, 
-                             replace = TRUE, prob = c(0.9893, 0.0107)))
-    massHydrogen <- sum(sample(c(1.0078250321, 2.014101778), 
-                               size = inputFormula$H, replace = TRUE, prob = c(0.999885, 
-                                                                               0.000115)))
-    massNitrogen <- sum(sample(c(14.0030740052, 15.0001088984), 
-                               size = inputFormula$N, replace = TRUE, prob = c(0.99632, 
-                                                                               0.00368)))
-    massOxygen <- sum(sample(c(15.9949146221, 16.9991315, 
-                               17.9991604), size = inputFormula$O, replace = TRUE, 
-                             prob = c(0.99757, 0.00038, 0.00205)))
-    massSulfer <- sum(sample(c(31.97207069, 32.9714585, 33.96786683, 
-                               35.96708088), size = inputFormula$S, replace = TRUE, 
-                             prob = c(0.9493, 0.0076, 0.0429, 2e-04)))
-    massPhosphorus <- inputFormula$P * 30.97376151
-    massBromine <- sum(sample(c(78.9183376, 80.916291), size = inputFormula$Br, 
-                              replace = TRUE, prob = c(0.5069, 0.4931)))
-    massChlorine <- sum(sample(c(34.96885271, 36.9659026), 
-                               size = inputFormula$Cl, replace = TRUE, prob = c(0.7578, 
-                                                                                0.2422)))
-    massFluorine <- inputFormula$F * 18.9984032
-    massSilicon <- sum(sample(c(27.9769265327, 28.97649472, 
-                                29.97377022), size = inputFormula$Si, replace = TRUE, 
-                              prob = c(0.922297, 0.046832, 0.030872)))
-    massMolecule <- sum(massCarbon, massHydrogen, massNitrogen, 
-                        massOxygen, massSulfer, massPhosphorus, massBromine, 
-                        massChlorine, massFluorine, massSilicon)
-    mz <- massMolecule/abs(charge)
-    return(mz)
-  }
-  sim <- replicate(10000, expr = simulation(inputFormula))
-  b <- seq(from = min(sim) - (1/(2 * abs(charge))), to = max(sim) + 
-             1, by = 1/abs(charge))
-  bins <- cut(sim, breaks = b)
-  mz <- round(tapply(sim, bins, mean), digits = 2)
-  intensity <- as.vector(table(bins))
-  spectrum <- data.frame(mz, intensity)
-  spectrum <- spectrum[spectrum$intensity != 0, ]
-  spectrum$percent <- with(spectrum, round(intensity/max(intensity) * 
-                                             100, digits = 2))
-  row.names(spectrum) <- 1:(nrow(spectrum))
-  return(spectrum)
+formulaCharToNamedVec <- function(char){
+  
+  vec <- unlist(strsplit(as.character(char), split = " "))
+  vec <- c(
+    C = as.integer(vec[2]),
+    H = as.integer(vec[4]),
+    N = as.integer(vec[6]),
+    O = as.integer(vec[8]),
+    S = as.integer(vec[10]),
+    P = as.integer(vec[12])
+  )
+  return(vec)
 }
+
+namedVecToformularChar <- function(nvec){
+  formChar <- paste("C",nvec[1],"H",nvec[2],"N",nvec[3],"O",nvec[4],"S",nvec[5],"P",nvec[6])
+  return(formChar)
+}
+
+
+
+generateChargedDist <- function(
+  uniprotSpeciesName = "Homo sapiens",
+  proteinAccession = "P02144", 
+  charge = 1:20, 
+  removeFirstM = FALSE, 
+  modification = "C 0 H 0 N 0 O 0 S 0 P 1"
+)
+  {
+  
+  tmp <- availableUniprotSpecies()
+  
+  if (any(tmp$`Species name` == uniprotSpeciesName)) taxId <- as.integer(tmp$`taxon ID`[tmp$`Species name` == uniprotSpeciesName])
+  #else generate warning and quit
+  
+  tmp <- UniProt.ws(taxId)
+  
+  proteinSequence <- select(tmp, proteinAccession, "SEQUENCE", "UNIPROTKB")[,2]
+  
+  if (removeFirstM == TRUE) proteinSequence <- substring(proteinSequence, 2)
+  
+  proteinChemForm <- pepToForm(proteinSequence)
+  
+  proteinChemForm <- formulaCharToNamedVec(proteinChemForm) + formulaCharToNamedVec(modification)
+  proteinChemForm <- namedVecToformularChar(proteinChemForm)
+  
+  dframe <- ldply(charge, function(x){
+    
+    tmp <- formulaCharToNamedVec(proteinChemForm)
+    tmp <- unname(tmp + c(0,x,0,0,0,0))
+    tmp <- list( C = tmp[1], H = tmp[2], N = tmp[3], O = tmp[4], S = tmp[5], P = tmp[6])
+    dist <- IsotopicDistribution( tmp, charge = x )
+    dist$charge <- x
+    dist$chemForm <- listToformularChar(tmp)  
+    return(dist)
+    
+  })
+  
+  return(dframe)
+}
+
+  

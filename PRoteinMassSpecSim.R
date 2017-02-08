@@ -23,19 +23,14 @@ library(UniProt.ws)
 
 library("OrgMassSpecR")
 library("ggplot2")
+library("plyr")
 
 source("Functions.R")
 
 
-up <- UniProt.ws(taxId=9606)
+up <- UniProt.ws(9796)
 
-up
-
-keytypes(up)
-
-columns(up)
-
-proteinAccession <- "P41236"
+proteinAccession <- "P68082"
 
 proteinSequence <- select(up, proteinAccession, "SEQUENCE", "UNIPROTKB")[,2]
 
@@ -43,37 +38,71 @@ proteinChemForm <- pepToForm(proteinSequence, output = "list")
 
 MonoisotopicMass(proteinChemForm)
 
-isotopeDist <- IsotopicDistribution(proteinChemForm)
+isotopeDist <- IsotopicDistribution(proteinChemForm, charge = 20)
 
 ggplot(isotopeDist, aes(mz, percent)) + geom_point()
 ggplot(isotopeDist, aes(mz, ymin = 0, ymax = percent)) + geom_linerange()
 
-charges <- 45
-
-Hydrogen = 1.0078250321
-
-remove(isotopeDist_ch)
-
-
-
-for (z in charges){
-  
-  tmp <- isotopeDist
-  tmp$z <- z
-  tmp$mz <- ( tmp$mz + (Hydrogen * z))  / z
-  
-  if ( z == charges[1]){isotopeDist_ch <- tmp}
-  else {isotopeDist_ch <- rbind(isotopeDist_ch, tmp)}
-  
-}
-
-ggplot(isotopeDist_ch, aes(mz, ymin = 0, ymax = percent, colour = "red")) + geom_linerange()
-
-
-
+ 
 aspirin <- IsotopicDistribution( list(C = 9, H = 8, O = 4))
 ggplot(aspirin, aes(mz, ymin = 0, ymax = percent, colour = "red")) + geom_linerange()
 
 
 
+myo <- read.csv2("Spectrum_Myoglobin.csv", sep = ",", dec = "." )
+colnames(myo) <- c("mz", "intensity")
 
+p <- ggplot()
+p <- p + geom_line(data =  myo, aes(mz, intensity)) 
+p + xlim(c(807.5,812))
+
+myo_sim <- generateChargedDist(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082", charge = 25:10, removeFirstM = TRUE, modification = "C 0 H 0 N 0 O 0 S 0 P 0")
+
+fit <- myo[ round(myo$mz, digits = 2) %in% round(myo_sim$mz[ myo_sim$percent == 100 ], digits = 2),]
+fit <- fit[ fit$intensity == max(fit$intensity),]
+
+myo_sim$fittedIntensity <- NA
+myo_sim$fittedIntensity <- fit$intensity * myo_sim$percent / 100  
+
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = fittedIntensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, fittedIntensity, colour = "red"))
+p + xlim(c(807.5,812))
+
+myo_sim <- generateChargedDist(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082", charge = 25:10, removeFirstM = TRUE, modification = "C 0 H 0 N 0 O 1 S 0 P 0")
+
+fit <- myo[ round(myo$mz, digits = 2) %in% round(myo_sim$mz[ myo_sim$percent == 100 ], digits = 2),]
+fit <- fit[ fit$intensity == max(fit$intensity),]
+
+myo_sim$fittedIntensity <- NA
+myo_sim$fittedIntensity <- fit$intensity * myo_sim$percent / 100  
+
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = fittedIntensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, fittedIntensity, colour = "red"))
+p + xlim(c(807.5,812))
+
+myo_sim <- generateChargedDist(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082", charge = 25:10, removeFirstM = TRUE, modification = "C 0 H 0 N 0 O 2 S 0 P 0")
+
+fit <- myo[ round(myo$mz, digits = 2) %in% round(myo_sim$mz[ myo_sim$percent == 100 ], digits = 2),]
+fit <- fit[ fit$intensity == max(fit$intensity),]
+
+myo_sim$fittedIntensity <- NA
+myo_sim$fittedIntensity <- fit$intensity * myo_sim$percent / 100  
+
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = fittedIntensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, fittedIntensity, colour = "red"))
+p + xlim(c(807.5,812))
+
+myo_sim <- generateChargedDist(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082", charge = 25:10, removeFirstM = TRUE, modification = "C 0 H 0 N 0 O 2 S 0 P 1")
+
+fit <- myo[ round(myo$mz, digits = 2) %in% round(myo_sim$mz[ myo_sim$percent == 100 ], digits = 2),]
+fit <- fit[ fit$intensity == max(fit$intensity),]
+
+myo_sim$fittedIntensity <- NA
+myo_sim$fittedIntensity <- fit$intensity * myo_sim$percent / 100  
+
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = fittedIntensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, fittedIntensity, colour = "red"))
+p + xlim(c(807.5,812))
+
+p <- p + xlim(c(807.5,812))
+ggsave(filename = "DemoPlot.png", plot = p)
