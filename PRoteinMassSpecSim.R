@@ -27,28 +27,6 @@ library("plyr")
 
 source("Functions.R")
 
-
-up <- UniProt.ws(9796)
-
-proteinAccession <- "P68082"
-
-proteinSequence <- select(up, proteinAccession, "SEQUENCE", "UNIPROTKB")[,2]
-
-proteinChemForm <- pepToForm(proteinSequence, output = "list")
-
-MonoisotopicMass(proteinChemForm)
-
-isotopeDist <- IsotopicDistribution(proteinChemForm, charge = 20)
-
-ggplot(isotopeDist, aes(mz, percent)) + geom_point()
-ggplot(isotopeDist, aes(mz, ymin = 0, ymax = percent)) + geom_linerange()
-
- 
-aspirin <- IsotopicDistribution( list(C = 9, H = 8, O = 4))
-ggplot(aspirin, aes(mz, ymin = 0, ymax = percent, colour = "red")) + geom_linerange()
-
-
-
 myo <- read.csv2("Spectrum_Myoglobin.csv", sep = ",", dec = "." )
 colnames(myo) <- c("mz", "intensity")
 
@@ -56,53 +34,72 @@ p <- ggplot()
 p <- p + geom_line(data =  myo, aes(mz, intensity)) 
 p + xlim(c(807.5,812))
 
-myo_sim <- generateChargedDist(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082", charge = 25:10, removeFirstM = TRUE, modification = "C 0 H 0 N 0 O 0 S 0 P 0")
+crange <- 35:10
 
-fit <- myo[ round(myo$mz, digits = 2) %in% round(myo_sim$mz[ myo_sim$percent == 100 ], digits = 2),]
-fit <- fit[ fit$intensity == max(fit$intensity),]
+protein <- fetchProteinSequence(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082")
 
-myo_sim$fittedIntensity <- NA
-myo_sim$fittedIntensity <- fit$intensity * myo_sim$percent / 100  
+myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange, removeFirstAA = TRUE, modification = "C 0 H 0 N 0 O 0 S 0 P 0")
 
-p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = fittedIntensity, colour = "red"))
-p <- p + geom_line(data = myo_sim, aes(mz, fittedIntensity, colour = "red"))
+myo_sim <- fitIntensity(measuredSpectrum = myo, simulatedSpectrum = myo_sim)
+
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = intensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, intensity, colour = "red"))
 p + xlim(c(807.5,812))
 
-myo_sim <- generateChargedDist(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082", charge = 25:10, removeFirstM = TRUE, modification = "C 0 H 0 N 0 O 1 S 0 P 0")
+myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange, removeFirstAA = TRUE, modification = "C 0 H 0 N 0 O 1 S 0 P 0")
 
-fit <- myo[ round(myo$mz, digits = 2) %in% round(myo_sim$mz[ myo_sim$percent == 100 ], digits = 2),]
-fit <- fit[ fit$intensity == max(fit$intensity),]
+myo_sim <- fitIntensity(measuredSpectrum = myo, simulatedSpectrum = myo_sim)
 
-myo_sim$fittedIntensity <- NA
-myo_sim$fittedIntensity <- fit$intensity * myo_sim$percent / 100  
-
-p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = fittedIntensity, colour = "red"))
-p <- p + geom_line(data = myo_sim, aes(mz, fittedIntensity, colour = "red"))
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = intensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, intensity, colour = "red"))
 p + xlim(c(807.5,812))
 
-myo_sim <- generateChargedDist(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082", charge = 25:10, removeFirstM = TRUE, modification = "C 0 H 0 N 0 O 2 S 0 P 0")
+myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange, removeFirstAA = TRUE, modification = "C 0 H 0 N 0 O 2 S 0 P 0")
 
-fit <- myo[ round(myo$mz, digits = 2) %in% round(myo_sim$mz[ myo_sim$percent == 100 ], digits = 2),]
-fit <- fit[ fit$intensity == max(fit$intensity),]
+myo_sim <- fitIntensity(measuredSpectrum = myo, simulatedSpectrum = myo_sim)
 
-myo_sim$fittedIntensity <- NA
-myo_sim$fittedIntensity <- fit$intensity * myo_sim$percent / 100  
-
-p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = fittedIntensity, colour = "red"))
-p <- p + geom_line(data = myo_sim, aes(mz, fittedIntensity, colour = "red"))
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = intensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, intensity, colour = "red"))
 p + xlim(c(807.5,812))
 
-myo_sim <- generateChargedDist(uniprotSpeciesName = "Equus caballus", proteinAccession = "P68082", charge = 25:10, removeFirstM = TRUE, modification = "C 0 H 0 N 0 O 2 S 0 P 1")
+myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange, removeFirstAA = TRUE, modification = "C 0 H 0 N 0 O 3 S 0 P 0")
 
-fit <- myo[ round(myo$mz, digits = 2) %in% round(myo_sim$mz[ myo_sim$percent == 100 ], digits = 2),]
-fit <- fit[ fit$intensity == max(fit$intensity),]
+myo_sim <- fitIntensity(measuredSpectrum = myo, simulatedSpectrum = myo_sim)
 
-myo_sim$fittedIntensity <- NA
-myo_sim$fittedIntensity <- fit$intensity * myo_sim$percent / 100  
-
-p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = fittedIntensity, colour = "red"))
-p <- p + geom_line(data = myo_sim, aes(mz, fittedIntensity, colour = "red"))
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = intensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, intensity, colour = "red"))
 p + xlim(c(807.5,812))
+
+myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange,
+removeFirstAA = TRUE, modification = "C 0 H 0 N 0 O 4 S 0 P 0")
+
+myo_sim <- fitIntensity(measuredSpectrum = myo, simulatedSpectrum = myo_sim)
+
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = intensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, intensity, colour = "red"))
+p + xlim(c(807.5,812))
+
+myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange, removeFirstAA = TRUE, modification = "C 0 H 0 N 0 O 2 S 0 P 1")
+
+myo_sim <- fitIntensity(measuredSpectrum = myo, simulatedSpectrum = myo_sim)
+
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = intensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, intensity, colour = "red"))
+p + xlim(c(807.5,812))
+
+myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange, removeFirstAA = TRUE, modification = "C 0 H -2 N 0 O -1 S 0 P 0")
+
+myo_sim <- fitIntensity(measuredSpectrum = myo, simulatedSpectrum = myo_sim)
+
+p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = intensity, colour = "red"))
+p <- p + geom_line(data = myo_sim, aes(mz, intensity, colour = "red"))
+p + xlim(c(807.5,812))
+
+p + xlim(c(677,685))
+
+p + xlim(c(1058,1065))
+
+p + xlim(c(530,535))
 
 p <- p + xlim(c(807.5,812))
 ggsave(filename = "DemoPlot.png", plot = p)

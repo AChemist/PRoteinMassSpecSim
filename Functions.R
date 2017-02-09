@@ -83,15 +83,11 @@ namedVecToformularChar <- function(nvec){
 }
 
 
-
-generateChargedDist <- function(
+fetchProteinSequence <- function(
   uniprotSpeciesName = "Homo sapiens",
-  proteinAccession = "P02144", 
-  charge = 1:20, 
-  removeFirstM = FALSE, 
-  modification = "C 0 H 0 N 0 O 0 S 0 P 1"
+  proteinAccession = "P02144"
 )
-  {
+{
   
   tmp <- availableUniprotSpecies()
   
@@ -101,8 +97,19 @@ generateChargedDist <- function(
   tmp <- UniProt.ws(taxId)
   
   proteinSequence <- select(tmp, proteinAccession, "SEQUENCE", "UNIPROTKB")[,2]
-  
-  if (removeFirstM == TRUE) proteinSequence <- substring(proteinSequence, 2)
+
+  return(proteinSequence)
+}
+
+
+generateChargedDist <- function(
+  proteinSequence = "SEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOW",
+  charge = 10, 
+  removeFirstAA = FALSE, 
+  modification = "C 0 H 0 N 0 O 0 S 0 P 0"
+)
+{
+  if (removeFirstAA) proteinSequence <- substring(proteinSequence, 2)
   
   proteinChemForm <- pepToForm(proteinSequence)
   
@@ -124,4 +131,14 @@ generateChargedDist <- function(
   return(dframe)
 }
 
+fitIntensity <- function(measuredSpectrum, simulatedSpectrum, decimalPlaces = 2){
+  
+  fit <- measuredSpectrum[ round(measuredSpectrum$mz, digits = decimalPlaces) %in% round(simulatedSpectrum$mz[ simulatedSpectrum$percent == 100 ], digits = decimalPlaces),]
+  fit <- fit[ fit$intensity == max(fit$intensity),]
+  
+  simulatedSpectrum$intensity <- fit$intensity * simulatedSpectrum$percent / 100  
+  
+  return(simulatedSpectrum)
+  
+}
   
