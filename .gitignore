@@ -17,6 +17,13 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# RStudio Files
+.RData
+.Rhistory
+.Rproj.user
+PRoteinMassSpecSim.Rproj
+
+
 # =========================
 # Operating System Files
 # =========================
