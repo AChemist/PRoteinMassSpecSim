@@ -35,7 +35,7 @@ pepToForm <- function(sequence){
     }
     resultsVector <- resultsVector + c(C = 0, H = 2, N = 0, O = 1, S = 0)
     
-    result <- paste("C",resultsVector[1],"H",resultsVector[2],"N",resultsVector[3],"O",resultsVector[4],"S",resultsVector[5], "P",0)
+    result <- list(C = resultsVector[1], H = resultsVector[2], N = resultsVector[3], O = resultsVector[4], S = resultsVector[5])
     
     return(result)
   }
@@ -57,8 +57,18 @@ formulaCharToList <- function(char){
   return(lis)
 }
 
+lis <- proteinChemForm
+
 listToformularChar <- function(lis){
-  formChar <- paste("C",lis[1],"H",lis[2],"N",lis[3],"O",lis[4],"S",lis[5],"P",lis[6])
+  
+  vec <- unlist(lis)
+  formChar <- ""
+  
+  for (i in length(vec)){
+    if (vec[i] != 0)  formChar <- paste0(formChar, names(vec)[i], vec[i], " ")
+  }
+  
+  #formChar <- paste("C",lis[1],"H",lis[2],"N",lis[3],"O",lis[4],"S",lis[5],"P",lis[6])
   return(formChar)
 }
 
@@ -106,27 +116,29 @@ generateChargedDist <- function(
   proteinSequence = "SEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOWSEBASTIANMALCHOW",
   charge = 10, 
   removeFirstAA = FALSE, 
-  modification = "C 0 H 0 N 0 O 0 S 0 P 0"
+  modification = list( C=0, H=0, N=0, O=0, S=0, P=0, Na=0, K=0, Ca=0)
 )
 {
   if (removeFirstAA) proteinSequence <- substring(proteinSequence, 2)
   
   proteinChemForm <- pepToForm(proteinSequence)
   
-  proteinChemForm <- formulaCharToNamedVec(proteinChemForm) + formulaCharToNamedVec(modification)
-  proteinChemForm <- namedVecToformularChar(proteinChemForm)
+  keys <- unique(c(names(proteinChemForm), names(modification)))
   
-  dframe <- ldply(charge, function(x){
+  proteinChemForm <- mapply(sum, proteinChemForm[keys], modification[keys])
+  proteinChemForm <- setNames(proteinChemForm, keys)
+  proteinChemForm <- as.list(proteinChemForm)
+  
+  dframe <- ldply(charge, function(z, cform){
     
-    tmp <- formulaCharToNamedVec(proteinChemForm)
-    tmp <- unname(tmp + c(0,x,0,0,0,0))
-    tmp <- list( C = tmp[1], H = tmp[2], N = tmp[3], O = tmp[4], S = tmp[5], P = tmp[6])
-    dist <- IsotopicDistribution( tmp, charge = x )
-    dist$charge <- x
-    dist$chemForm <- listToformularChar(tmp)  
+    cform$H <-  cform$H + z
+    
+    dist <- IsotopicDistribution( cform, charge = z )
+    dist$charge <- z
+    dist$chemForm <- listToformularChar(cform)  
     return(dist)
     
-  })
+  }, proteinChemForm)
   
   return(dframe)
 }
