@@ -70,8 +70,7 @@ p <- p + geom_linerange(data = myo_sim, aes(mz, ymin = 0, ymax = intensity, colo
 p <- p + geom_line(data = myo_sim, aes(mz, intensity, colour = "red"))
 p + xlim(c(807.5,812))
 
-myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange,
-removeFirstAA = TRUE, modification = "C 0 H 0 N 0 O 4 S 0 P 0")
+myo_sim <- generateChargedDist(proteinSequence = protein, charge = crange, removeFirstAA = TRUE, modification = "C 0 H 0 N 0 O 4 S 0 P 0")
 
 myo_sim <- fitIntensity(measuredSpectrum = myo, simulatedSpectrum = myo_sim)
 

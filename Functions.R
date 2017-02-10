@@ -131,14 +131,25 @@ generateChargedDist <- function(
   return(dframe)
 }
 
-fitIntensity <- function(measuredSpectrum, simulatedSpectrum, decimalPlaces = 2){
+fitIntensity <- function(measuredSpectrum, simulatedSpectrum, mzWidth = 0.2){
   
-  fit <- measuredSpectrum[ round(measuredSpectrum$mz, digits = decimalPlaces) %in% round(simulatedSpectrum$mz[ simulatedSpectrum$percent == 100 ], digits = decimalPlaces),]
-  fit <- fit[ fit$intensity == max(fit$intensity),]
+  simulatedSpectrum_fitted <- ddply(simulatedSpectrum, "charge", function(simSpec, mesSpec){
+    
+    simSpec100 <- simSpec[ simSpec$percent == 100,]
+    filter <- mesSpec$mz > simSpec100$mz - mzWidth/2 &  mesSpec$mz < simSpec100$mz + mzWidth/2
+    
+    if (any(filter)){
+      
+      mesSpec <- mesSpec[filter,]
+      mesSpec <- mesSpec[ mesSpec$intensity == max(mesSpec$intensity),]
+      
+      simSpec$intensity <- mesSpec$intensity * simSpec$percent / 100
+    }
+    else simSpec$intensity <- 0
+    
+    return(simSpec)
+  }, measuredSpectrum)
   
-  simulatedSpectrum$intensity <- fit$intensity * simulatedSpectrum$percent / 100  
-  
-  return(simulatedSpectrum)
-  
+  return(simulatedSpectrum_fitted)
 }
   
