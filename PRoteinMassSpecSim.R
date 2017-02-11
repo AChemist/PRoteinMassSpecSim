@@ -21,11 +21,11 @@
 #biocLite("UniProt.ws")
 library(UniProt.ws)
 
-library("OrgMassSpecR")
+#library("OrgMassSpecR")
 library("ggplot2")
 library("plyr")
 
-source("Functions.R")
+
 
 myo <- read.csv2("Spectrum_Myoglobin.csv", sep = ",", dec = "." )
 colnames(myo) <- c("mz", "intensity")
